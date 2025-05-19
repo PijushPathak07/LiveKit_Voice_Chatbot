@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Chatbot</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>LiveKit Voice Chatbot</h1>
+    
+    <div class="chat-container" id="chat-container"></div>
+    
+    <div class="input-area">
+        <input type="text" id="message-input" placeholder="Type your message here..." />
+        <button id="send-btn">Send</button>
+    </div>
+    
+    <div class="controls">
+        <button id="start-voice-btn">Start Voice Chat</button>
+        <button id="stop-voice-btn" disabled>Stop Voice Chat</button>
+        <button id="clear-btn">Clear Chat</button>
+    </div>
+
+    <script>
+        // DOM elements
+        const chatContainer = document.getElementById('chat-container');
+        const messageInput = document.getElementById('message-input');
+        const sendBtn = document.getElementById('send-btn');
+        const startVoiceBtn = document.getElementById('start-voice-btn');
+        const stopVoiceBtn = document.getElementById('stop-voice-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        
+        // WebSocket connection
+        let socket;
+        
+        // Initialize WebSocket connection
+        function initWebSocket() {
+            socket = new WebSocket(`ws://${window.location.host}/ws`);
+            
+            socket.onopen = () => {
+                console.log('WebSocket connection established');
+                addMessage('System', 'Connected to server');
+            };
+            
+            socket.onmessage = (event) => {
+                addMessage('Bot', event.data);
+            };
+            
+            socket.onclose = () => {
+                console.log('WebSocket connection closed');
+                addMessage('System', 'Disconnected from server');
+                
+                // Try to reconnect after 3 seconds
+                setTimeout(initWebSocket, 3000);
+            };
+            
+            socket.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                addMessage('System', 'Connection error occurred');
+            };
+        }
+        
+        // Add message to chat container
+        function addMessage(sender, text) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message');
+            messageElement.classList.add(sender.toLowerCase() === 'bot' ? 'bot' : 'user');
+            
+            messageElement.innerHTML = `<strong>${sender}:</strong> ${text}`;
+            chatContainer.appendChild(messageElement);
+            
+            // Scroll to bottom
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        // Send message to server
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            
+            if (message && socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(message);
+                addMessage('You', message);
+                messageInput.value = '';
+                messageInput.focus();
+            }
+        }
+        
+        // Initialize LiveKit voice chat
+        async function initLiveKitVoice() {
+            try {
+                // Fetch LiveKit token from server
+                const response = await fetch(`/token?identity=user-${Date.now()}`);
+                const data = await response.json();
+                
+                // TODO: Implement LiveKit voice integration
+                // This will require loading the LiveKit JS SDK and initializing voice
+                
+                addMessage('System', 'Voice chat initialized (placeholder)');
+                startVoiceBtn.disabled = true;
+                stopVoiceBtn.disabled = false;
+            } catch (error) {
+                console.error('Error initializing voice chat:', error);
+                addMessage('System', 'Failed to initialize voice chat');
+            }
+        }
+        
+        // Event listeners
+        sendBtn.addEventListener('click', sendMessage);
+        
+        messageInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        
+        startVoiceBtn.addEventListener('click', initLiveKitVoice);
+        
+        stopVoiceBtn.addEventListener('click', () => {
+            // TODO: Implement voice chat stop functionality
+            addMessage('System', 'Voice chat stopped (placeholder)');
+            startVoiceBtn.disabled = false;
+            stopVoiceBtn.disabled = true;
+        });
+        
+        clearBtn.addEventListener('click', () => {
+            chatContainer.innerHTML = '';
+        });
+        
+        // Initialize WebSocket on page load
+        window.addEventListener('load', initWebSocket);
+    </script>
+</body>
+</html>
