@@ -213,5 +213,3 @@ To test:
 2. Send a message (e.g., "Test") and verify the response ("Echo: Test").
 3. Test audio buttons and check console logs.
 4. Ensure the UI matches the styled design from `style.css`.
-
-If you encounter issues or want to extend the project (e.g., full audio support, real LLM integration), please provide details, and I’ll assist further!
